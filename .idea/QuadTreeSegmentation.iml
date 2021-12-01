@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/DeepGlobe/data" />
       <excludeFolder url="file://$MODULE_DIR$/DeepGlobe" />
+      <excludeFolder url="file://$MODULE_DIR$/repo" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (quadtree)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

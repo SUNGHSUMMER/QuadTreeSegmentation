@@ -5,7 +5,6 @@ from PIL import Image, ImageFile
 import random
 from torchvision.transforms import ToTensor
 from torchvision import transforms
-import cv2
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -51,9 +50,10 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class DeepGlobe(data.Dataset):
-    """input and label image dataset"""
-
-    def __init__(self, dataset, root, ids, label=False, transform=False):
+    """
+    input and label image dataset
+    """
+    def __init__(self, root, ids, label=False, transform=False):
         super(DeepGlobe, self).__init__()
         """
         Args:
@@ -61,7 +61,6 @@ class DeepGlobe(data.Dataset):
         fileDir(string):  directory with all the input images.
         transform(callable, optional): Optional transform to be applied on a sample
         """
-        self.dataset = dataset
         self.root = root
         self.label = label
         self.transform = transform
@@ -70,20 +69,17 @@ class DeepGlobe(data.Dataset):
         self.color_jitter = transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.04)
 
     def __getitem__(self, index):
-        sample = {}
-        sample['id'] = self.ids[index][:-8]
+        sample = {'id': self.ids[index][:-8]}
         image = Image.open(os.path.join(self.root, "sat", self.ids[index]))  # w, h
         sample['image'] = image
         if self.label:
-            if self.dataset == 1:
-                pass
-            else:
-                label = Image.open(os.path.join(self.root, "label", self.ids[index].replace('_sat.jpg', '_mask.png')))
+
+            label = Image.open(os.path.join(self.root, "label", self.ids[index].replace('_sat.jpg', '_mask.png')))
             sample['label'] = label
-        if self.transform and self.label:
-            image, label = self._transform(image, label)
-            sample['image'] = image
-            sample['label'] = label
+            if self.transform:
+                image, label = self._transform(image, label)
+                sample['image'] = image
+                sample['label'] = label
         return sample
 
     def _transform(self, image, label):
