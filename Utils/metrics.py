@@ -28,7 +28,9 @@ class ConfusionMatrix(object):
         intersect = np.diag(hist)
         union = hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist)
         iou = intersect / union
-        mean_iou = np.mean(np.nan_to_num(iou[1:]))
+
+        # use [:-1] since class7 is not considered in deep_globe metric
+        mean_iou = np.mean(np.nan_to_num(iou[:-1]))
 
         return {
             'iou': iou,

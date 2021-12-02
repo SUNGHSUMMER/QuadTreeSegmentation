@@ -4,11 +4,8 @@
 from __future__ import absolute_import, division, print_function
 
 import os
-import sys
-import numpy as np
 import torch
 from torch import nn
-from torchvision import transforms
 from tqdm import tqdm
 import torch.utils.data as data
 
@@ -29,15 +26,19 @@ args = {
     "model_path": "./logs/saved_models/",
     "log_path": "./logs/runs/",
     "device": "cuda",
-    "devices": "0",
+    "devices": "0, 1",
     "learning_rate": 0.001,
     "num_epochs": 50,
     "num_worker": 0,
     "augment": True,
-    "sub_batch_size": 6
+    "sub_batch_size": 6,
+    "model_name": "ResNet18_Bilinear",
+    "val_frequency": 5
 }
 
 n_class = args["n_class"]
+model_name = args["model_name"]
+print("Using model: "+ model_name)
 
 device = torch.device(args["device"])
 if args["device"] == "cuda":
@@ -48,10 +49,12 @@ img_path = os.path.join(data_path, "data")
 index_path = os.path.join(data_path, "data_split")
 
 log_path = args["log_path"]
-model_path = args["model_path"]
+if not os.path.exists(log_path):
+    os.makedirs(log_path)
 
-print(img_path)
-print(index_path)
+model_path = args["model_path"]
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
 
 ids_train = txt2list(os.path.join(index_path, "train.txt"))
 ids_test = txt2list(os.path.join(index_path, "crossvali.txt"))
@@ -61,6 +64,7 @@ augment = args["augment"]
 
 num_epochs = args["num_epochs"]
 learning_rate = args["learning_rate"]
+val_frequency = args["val_frequency"]
 
 batch_size = args["batch_size"]
 sub_batch_size = args["sub_batch_size"]
@@ -100,12 +104,12 @@ criterion1 = FocalLoss(gamma=3)
 criterion = lambda x, y: criterion1(x, y)
 
 trainer = Trainer(criterion, optimizer, n_class, sub_batch_size, mode=1)
-# evaluator = Evaluator(n_class, size_p, size_g, sub_batch_size, mode, train, dataset, context10, context15)
+evaluator = Evaluator(n_class, sub_batch_size)
 
 writer = SummaryWriter(log_dir=log_path + "DeepGlobe")
 f_log = open(log_path + "DeepGlobe" + ".log", 'w')
 
-best_pred = 0.0
+best_miou = 0.0
 print("start training......")
 
 for epoch in range(num_epochs):
@@ -115,7 +119,7 @@ for epoch in range(num_epochs):
     tbar = tqdm(dataloader_train)
     train_loss = 0
     for i_batch, sample_batched in enumerate(tbar):
-        scheduler(optimizer, i_batch, epoch, best_pred)  # update lr
+        scheduler(optimizer, i_batch, epoch)  # update lr
         loss = trainer.train(sample_batched, model)
         train_loss += loss.item()
         score_train = trainer.get_scores()
@@ -129,38 +133,25 @@ for epoch in range(num_epochs):
     trainer.reset_metrics()
     # torch.cuda.empty_cache()
 
-    if (epoch + 1) % 5 == 0:
+    if (epoch + 1) % val_frequency == 0:
         with torch.no_grad():
             print("evaling...")
             model.eval()
             tbar = tqdm(dataloader_val)
             for i_batch, sample_batched in enumerate(tbar):
-                predictions = evaluator.eval_test(sample_batched, model, global_fixed_medium, global_fixed_large)
+                predictions = evaluator.eval_test(sample_batched, model)
                 score_val = evaluator.get_scores()
-                # use [1:] since class0 is not considered in deep_globe metric
-                tbar.set_description('mIoU: %.3f' % (np.mean(np.nan_to_num(score_val["iou"])[1:])))
-                images = sample_batched['image']
-                labels = sample_batched['label']  # PIL images
+                tbar.set_description('mIoU: %.3f' % score_val["iou_mean"])
 
-                if i_batch * batch_size + len(images) > (epoch % len(dataloader_val)) and i_batch * batch_size <= (
-                        epoch % len(dataloader_val)):
-                    writer.add_image('image', transforms.ToTensor()(
-                        images[(epoch % len(dataloader_val)) - i_batch * batch_size]), epoch)
-                    writer.add_image('mask', classToRGB(dataset, np.array(
-                        labels[(epoch % len(dataloader_val)) - i_batch * batch_size])), epoch)
-                    writer.add_image('prediction', classToRGB(dataset, predictions[
-                        (epoch % len(dataloader_val)) - i_batch * batch_size]), epoch)
-
-            torch.save(model.state_dict(), model_path + task_name + ".epoch" + str(epoch) + ".pth")
+            torch.save(model.state_dict(), model_path + model_name + "_epoch" + str(epoch + 1) + ".pth")
 
             score_val = evaluator.get_scores()
             evaluator.reset_metrics()
 
-            if np.mean(np.nan_to_num(score_val["iou"][1:])) > best_pred: best_pred = np.mean(
-                np.nan_to_num(score_val["iou"][1:]))
+            if score_val["iou_mean"] > best_miou: best_miou = score_val["iou_mean"]
             log = ""
-            log = log + 'epoch [{}/{}] IoU: train = {:.4f}, val = {:.4f}'.format(epoch + 1, num_epochs, np.mean(
-                np.nan_to_num(score_train["iou"][1:])), np.mean(np.nan_to_num(score_val["iou"][1:]))) + "\n"
+            log = log + 'epoch [{}/{}] mIoU: train = {:.4f}, val = {:.4f}'.format(
+                epoch + 1, num_epochs, score_train["iou_mean"], score_val["iou_mean"]) + "\n"
             log = log + "train: " + str(score_train["iou"]) + "\n"
             log = log + "val:" + str(score_val["iou"]) + "\n"
             log += "================================\n"
@@ -169,5 +160,5 @@ for epoch in range(num_epochs):
             f_log.write(log)
             f_log.flush()
             writer.add_scalars('IoU', {'train iou': score_train["iou_mean"],
-                                       'validation iou': score_val["iou_mean"]}, epoch)
+                                       'validation iou': score_val["iou_mean"]}, epoch + 1)
 f_log.close()

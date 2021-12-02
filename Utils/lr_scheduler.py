@@ -1,5 +1,6 @@
 import math
 
+
 class LR_Scheduler(object):
     """Learning Rate Scheduler
 
@@ -16,6 +17,7 @@ class LR_Scheduler(object):
 
         iters_per_epoch: number of iterations per epoch
     """
+
     def __init__(self, mode, base_lr, num_epochs, iters_per_epoch=0,
                  lr_step=0, warmup_epochs=0):
         self.mode = mode
@@ -28,9 +30,8 @@ class LR_Scheduler(object):
         self.N = num_epochs * iters_per_epoch
         self.epoch = -1
         self.warmup_iters = warmup_epochs * iters_per_epoch
-        
 
-    def __call__(self, optimizer, i, epoch, best_pred):
+    def __call__(self, optimizer, i, epoch):
         T = epoch * self.iters_per_epoch + i
         if self.mode == 'cos':
             lr = 0.5 * self.lr * (1 + math.cos(1.0 * T / self.N * math.pi))
@@ -44,8 +45,6 @@ class LR_Scheduler(object):
         if self.warmup_iters > 0 and T < self.warmup_iters:
             lr = lr * 1.0 * T / self.warmup_iters
         if epoch > self.epoch:
-            print('\n=>Epoches %i, learning rate = %.7f, \
-                previous best = %.4f' % (epoch, lr, best_pred))
             self.epoch = epoch
         assert lr >= 0
         self._adjust_learning_rate(optimizer, lr)
