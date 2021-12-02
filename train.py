@@ -14,7 +14,7 @@ import torch.utils.data as data
 
 from Evaluator import Evaluator
 from Trainer import Trainer
-from data_utils.dataloader import DeepGlobe
+from data_utils.dataloader import DeepGlobe, collate, collate_test
 from Utils.loss import FocalLoss
 from Utils.lr_scheduler import LR_Scheduler
 from Utils.optimizer import get_Adam_optimizer
@@ -29,11 +29,11 @@ args = {
     "model_path": "./logs/saved_models/",
     "log_path": "./logs/runs/",
     "device": "cuda",
-    "devices": "0, 1",
+    "devices": "0",
     "learning_rate": 0.001,
     "num_epochs": 50,
     "num_worker": 0,
-    "transform": True,
+    "augment": True,
     "sub_batch_size": 6
 }
 
@@ -41,7 +41,7 @@ n_class = args["n_class"]
 
 device = torch.device(args["device"])
 if args["device"] == "cuda":
-    os.environ["CUDA_VISIBLE_DEVICES"] = args["device"]
+    os.environ["CUDA_VISIBLE_DEVICES"] = args["devices"]
 
 data_path = args["data_path"]
 img_path = os.path.join(data_path, "data")
@@ -57,7 +57,7 @@ ids_train = txt2list(os.path.join(index_path, "train.txt"))
 ids_test = txt2list(os.path.join(index_path, "crossvali.txt"))
 ids_val = txt2list(os.path.join(index_path, "test.txt"))
 
-transform = args["transform"]
+augment = args["augment"]
 
 num_epochs = args["num_epochs"]
 learning_rate = args["learning_rate"]
@@ -70,17 +70,17 @@ num_worker = args["num_worker"]
 ###################################
 print("preparing datasets and dataloaders......")
 
-dataset_train = DeepGlobe(img_path, ids_train, label=True, transform=transform)
+dataset_train = DeepGlobe(img_path, ids_train, label=True, augment=augment)
 dataloader_train = data.DataLoader(dataset=dataset_train, batch_size=batch_size, num_workers=num_worker,
-                                               shuffle=True, pin_memory=True)
+                                   collate_fn=collate, shuffle=True, pin_memory=True)
 
 dataset_val = DeepGlobe(img_path, ids_val, label=True)
 dataloader_val = data.DataLoader(dataset=dataset_val, batch_size=batch_size, num_workers=num_worker,
-                                             shuffle=False, pin_memory=True)
+                                 collate_fn=collate, shuffle=False, pin_memory=True)
 
 dataset_test = DeepGlobe(img_path, ids_test, label=False)
 dataloader_test = data.DataLoader(dataset=dataset_test, batch_size=batch_size, num_workers=num_worker,
-                                              shuffle=False, pin_memory=True)
+                                  collate_fn=collate, shuffle=False, pin_memory=True)
 
 print("Length of Train Dataset:", len(dataloader_train))
 print("Length of Val Dataset:", len(dataloader_val))
@@ -104,6 +104,9 @@ trainer = Trainer(criterion, optimizer, n_class, sub_batch_size, mode=1)
 
 writer = SummaryWriter(log_dir=log_path + "DeepGlobe")
 f_log = open(log_path + "DeepGlobe" + ".log", 'w')
+
+best_pred = 0.0
+print("start training......")
 
 for epoch in range(num_epochs):
 

@@ -48,12 +48,25 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 #             outputs[batchCnt, index, ...] = cv2.GaussianBlur(inputs[batchCnt, index, ...].astype(np.float), (7, 7), 0)
 #     return outputs
 
+def collate(batch):
+    image = [b['image'] for b in batch]  # w, h
+    label = [b['label'] for b in batch]
+    id = [b['id'] for b in batch]
+    return {'image': image, 'label': label, 'id': id}
+
+
+def collate_test(batch):
+    image = [b['image'] for b in batch]  # w, h
+    id = [b['id'] for b in batch]
+    return {'image': image, 'id': id}
+
 
 class DeepGlobe(data.Dataset):
     """
     input and label image dataset
     """
-    def __init__(self, root, ids, label=False, transform=False):
+
+    def __init__(self, root, ids, label=True, augment=False):
         super(DeepGlobe, self).__init__()
         """
         Args:
@@ -63,12 +76,19 @@ class DeepGlobe(data.Dataset):
         """
         self.root = root
         self.label = label
-        self.transform = transform
+        self.augment = augment
         self.ids = ids
 
         self.color_jitter = transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.04)
 
     def __getitem__(self, index):
+        # image = Image.open(os.path.join(self.root, "sat", self.ids[index]))  # w, h
+        # label = Image.open(os.path.join(self.root, "label", self.ids[index].replace('_sat.jpg', '_mask.png')))
+        # if self.transform:
+        #     image, label = self._transform(image, label)
+        #
+        # return image, label
+
         sample = {'id': self.ids[index][:-8]}
         image = Image.open(os.path.join(self.root, "sat", self.ids[index]))  # w, h
         sample['image'] = image
@@ -76,13 +96,15 @@ class DeepGlobe(data.Dataset):
 
             label = Image.open(os.path.join(self.root, "label", self.ids[index].replace('_sat.jpg', '_mask.png')))
             sample['label'] = label
-            if self.transform:
-                image, label = self._transform(image, label)
+            if self.augment:
+                image, label = self._augment(image, label)
                 sample['image'] = image
                 sample['label'] = label
+
         return sample
 
-    def _transform(self, image, label):
+    @staticmethod
+    def _augment(image, label):
 
         if np.random.random() > 0.5:
             image = transforms.functional.hflip(image)

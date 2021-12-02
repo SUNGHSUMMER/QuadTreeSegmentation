@@ -1,8 +1,10 @@
 import torch
 import sys
 from Utils.metrics import ConfusionMatrix
-from Utils.transform import masks_transform
+from Utils.transform import masks_transform, images_transform
+import torch.nn.functional as F
 import sys
+
 
 class Trainer(object):
     def __init__(self, criterion, optimizer, n_class, sub_batch_size=6, mode=1):
@@ -25,13 +27,31 @@ class Trainer(object):
 
     def train(self, sample, model):
         images, labels = sample['image'], sample['label']  # PIL images
-        labels_npy = masks_transform(labels, numpy=True)  # label of origin size in numpy
+        images = images_transform(images)  # list of PIL to Tensor
+        labels_tensor = masks_transform(labels, numpy=False)  # list of PIL to numpy
+        labels_numpy = masks_transform(labels, numpy=True)  # list of PIL to numpy
+
+        _, _, H, W = images.shape
+
+        scaled_images = F.interpolate(images, size=(306, 306), mode='bilinear', align_corners=True)
+
+        output = model(scaled_images)
+        output = F.interpolate(output, size=(H, W), mode='bilinear', align_corners=True)
+
+        # print("output", output.shape)
+        # print("labels", labels_npy.shape)
+
+        loss = self.criterion(output, labels_tensor)
+        loss.backward()
 
         self.optimizer.step()
         self.optimizer.zero_grad()
-        ####################################################################################
-        scores = np.array(patch2global(predicted_patches, self.n_class, sizes, coordinates,
-                                       self.size_p))  # merge softmax scores from patches (overlaps)
-        predictions = scores.argmax(1)  # b, h, w
-        self.metrics.update(labels_npy, predictions)
+
+        predictions = output.argmax(1).cpu().numpy()  # b, h, ws
+
+        # print(labels_numpy.shape)
+        # print(predictions.shape)
+
+        self.metrics.update(labels_numpy, predictions)
+
         return loss
