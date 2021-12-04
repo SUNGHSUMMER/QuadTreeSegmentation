@@ -22,18 +22,17 @@ class Evaluator(object):
         self.metrics.reset()
 
     def eval_test(self, sample, model):
+        """
+
+        :param sample:sample is a dict, loaded by dataloader,it have three keys, id image and label
+        :param model: the model to use
+        :return: predictions is the output prediction of format of numpy
+        """
         images, labels = sample['image'], sample['label']  # PIL images
         images = images_transform(images)  # list of PIL to Tensor
         labels_numpy = masks_transform(labels, numpy=True)  # list of PIL to numpy
 
         output = model(images)
-
-        # _, _, H, W = images.shape
-        #
-        # scaled_images = F.interpolate(images, size=(612, 612), mode='bilinear', align_corners=True)
-        #
-        # output = model(scaled_images)
-        # output = F.interpolate(output, size=(H, W), mode='bilinear', align_corners=True)
 
         predictions = output.argmax(1).cpu().numpy()  # b, h, ws
 

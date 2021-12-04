@@ -2,7 +2,6 @@ from Utils.metrics import ConfusionMatrix
 from Utils.transform import masks_transform, images_transform
 
 
-
 class Trainer(object):
     def __init__(self, criterion, optimizer, n_class, sub_batch_size=6, mode=1):
         self.criterion = criterion
@@ -27,6 +26,7 @@ class Trainer(object):
         images = images_transform(images)  # list of PIL to Tensor
         labels_tensor = masks_transform(labels, numpy=False)  # list of PIL to numpy
         labels_numpy = masks_transform(labels, numpy=True)  # list of PIL to numpy
+
 
         output = model(images)
 

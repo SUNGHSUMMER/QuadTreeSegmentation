@@ -34,15 +34,20 @@ args = {
     "num_worker": 0,
     "augment": True,
     "sub_batch_size": 6,
-    "model_name": "ResNet18_Bilinear306",
+    "model_name": "ResNet18_Bilinear",
     "model_notes": "306_patch_global",
     "val_frequency": 5
 }
 print("----------------------------------------------------------------")
 n_class = args["n_class"]
+
+#######################################################################
+model = MinimalGlobalSeg(num_classes=n_class, patch_size=306)
+#######################################################################
 model_name = args["model_name"]
 model_notes = args["model_notes"]
 print("Using model: " + model_name + " And " + model_notes)
+epoch_name = ""
 
 device = torch.device(args["device"])
 if args["device"] == "cuda":
@@ -69,7 +74,7 @@ num_epochs = args["num_epochs"]
 learning_rate = args["learning_rate"]
 val_frequency = args["val_frequency"]
 
-save_path = os.path.join(model_path, model_name+model_notes)
+save_path = os.path.join(model_path, model_name + model_notes)
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
@@ -89,11 +94,10 @@ dataset_val = DeepGlobe(img_path, ids_val, label=True)
 dataloader_val = data.DataLoader(dataset=dataset_val, batch_size=batch_size, num_workers=num_worker,
                                  collate_fn=collate, shuffle=False, pin_memory=True)
 
-print("Length of Train Dataset:", len(dataloader_train))
-print("Length of Val Dataset:", len(dataloader_val))
+print("Length of Train Dataset:", len(dataset_train))
+print("Length of Val Dataset:", len(dataset_val))
 
 ##############################################
-model = MinimalGlobalSeg(num_classes=7, patch_size=612)
 model = nn.DataParallel(model)
 model = model.to(device)
 ##############################################
@@ -173,8 +177,8 @@ for epoch in range(num_epochs):
                                        'validation iou': score_val["iou_mean"]}, epoch + 1)
 
 final_log = "Best mIoU in Val Dataset is: " + str(best_miou) + " in Epoch: " + str(best_epoch)
+
 print(final_log)
 f_log.write(final_log)
 
 f_log.close()
-
