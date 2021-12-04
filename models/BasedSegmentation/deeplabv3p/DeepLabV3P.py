@@ -24,6 +24,7 @@ class DeepLabV3P(nn.Module):
 
         feat16x, feat4x = self.resnet(x) # (shape: (batch_size, 512, h/16, w/16)) (assuming self.resnet is ResNet18_OS16 or ResNet34_OS16. If self.resnet is ResNet18_OS8 or ResNet34_OS8, it will be (batch_size, 512, h/8, w/8). If self.resnet is ResNet50-152, it will be (batch_size, 4*512, h/16, w/16))
 
+        print(feat16x.shape)
         feat16x = self.aspp(feat16x) # (shape: (batch_size, num_classes, h/16, w/16))
         output = F.interpolate(feat16x, size=feat4x.size()[2:], mode='bilinear', align_corners=True)
 
@@ -37,4 +38,5 @@ if __name__ == "__main__":
     net = DeepLabV3P()
     test = torch.randn((2, 3, 256, 256))
     out = net(test)
+    print(out.shape)
 

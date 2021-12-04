@@ -17,7 +17,8 @@ from Utils.loss import FocalLoss
 from Utils.lr_scheduler import LR_Scheduler
 from Utils.optimizer import get_Adam_optimizer
 from data_utils.getindex import txt2list
-from models.minimal_global_seg.MinimalGlobalSeg import MinimalGlobalSeg
+# from models.minimal_global_seg.MinimalGlobalSeg import MinimalGlobalSeg
+from models.minimal_global_seg.MinimalGlobalSeg_DeepLabV3plus_ResNet101 import MinimalGlobalSeg
 from tensorboardX import SummaryWriter
 from Utils.visual import show_score_as_table
 
@@ -34,8 +35,8 @@ args = {
     "num_worker": 0,
     "augment": True,
     "sub_batch_size": 6,
-    "model_name": "ResNet18_Bilinear",
-    "model_notes": "306_patch_global",
+    "model_name": "MGS",
+    "model_notes": "DeepLabV3P_ResNet101",
     "val_frequency": 5
 }
 print("----------------------------------------------------------------")

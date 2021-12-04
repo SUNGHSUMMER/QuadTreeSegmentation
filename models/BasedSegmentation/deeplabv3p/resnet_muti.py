@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import os
+from torchsummary import summary
 
 
 class ResNet18_Muti(nn.Module):
@@ -27,14 +28,14 @@ class ResNet18_Muti(nn.Module):
 
         feat16x = self.resnet16x(feat8x)
 
-        return feat16x, feat8x, feat4x
+        return feat16x, feat4x
 
 if __name__ == "__main__":
     x = torch.randn((1, 3, 256, 256))
     net = ResNet18_Muti()
-    f32x, f16x, f8x = net(x)
-    print("feature32x: " + str(f32x.shape))
+    f16x, f8x, f4x = net(x)
     print("feature16x: " + str(f16x.shape))
     print("feature8x: " + str(f8x.shape))
+    print("feature4x: " + str(f4x.shape))
 
     # summary(net, (3, 256, 256), batch_size=1, device='cpu')
