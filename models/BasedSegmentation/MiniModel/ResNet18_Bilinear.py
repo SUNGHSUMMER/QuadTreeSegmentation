@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.MiniModel.ResNet_Features import ResNet18_Features
+from models.BasedSegmentation.MiniModel.ResNet_Features import ResNet18_Features
 
 
 class ResNet18_Bilinear(nn.Module):

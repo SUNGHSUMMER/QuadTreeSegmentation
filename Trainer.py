@@ -1,9 +1,6 @@
-import torch
-import sys
 from Utils.metrics import ConfusionMatrix
 from Utils.transform import masks_transform, images_transform
-import torch.nn.functional as F
-import sys
+
 
 
 class Trainer(object):
@@ -31,12 +28,14 @@ class Trainer(object):
         labels_tensor = masks_transform(labels, numpy=False)  # list of PIL to numpy
         labels_numpy = masks_transform(labels, numpy=True)  # list of PIL to numpy
 
-        _, _, H, W = images.shape
+        output = model(images)
 
-        scaled_images = F.interpolate(images, size=(306, 306), mode='bilinear', align_corners=True)
+        # _, _, H, W = images.shape
 
-        output = model(scaled_images)
-        output = F.interpolate(output, size=(H, W), mode='bilinear', align_corners=True)
+        # scaled_images = F.interpolate(images, size=(612, 612), mode='bilinear', align_corners=True)
+        #
+        # output = model(scaled_images)
+        # output = F.interpolate(output, size=(H, W), mode='bilinear', align_corners=True)
 
         # print("output", output.shape)
         # print("labels", labels_npy.shape)

@@ -1,10 +1,6 @@
 from Utils.metrics import ConfusionMatrix
-import torch
-import sys
-from Utils.metrics import ConfusionMatrix
 from Utils.transform import masks_transform, images_transform
 import torch.nn.functional as F
-import sys
 
 
 class Evaluator(object):
@@ -30,12 +26,14 @@ class Evaluator(object):
         images = images_transform(images)  # list of PIL to Tensor
         labels_numpy = masks_transform(labels, numpy=True)  # list of PIL to numpy
 
-        _, _, H, W = images.shape
+        output = model(images)
 
-        scaled_images = F.interpolate(images, size=(306, 306), mode='bilinear', align_corners=True)
-
-        output = model(scaled_images)
-        output = F.interpolate(output, size=(H, W), mode='bilinear', align_corners=True)
+        # _, _, H, W = images.shape
+        #
+        # scaled_images = F.interpolate(images, size=(612, 612), mode='bilinear', align_corners=True)
+        #
+        # output = model(scaled_images)
+        # output = F.interpolate(output, size=(H, W), mode='bilinear', align_corners=True)
 
         predictions = output.argmax(1).cpu().numpy()  # b, h, ws
 

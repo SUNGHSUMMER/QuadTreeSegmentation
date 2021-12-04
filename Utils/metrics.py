@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 
 class ConfusionMatrix(object):
@@ -10,7 +9,8 @@ class ConfusionMatrix(object):
         # axis = 1: prediction
         self.confusion_matrix = np.zeros((n_classes, n_classes))
 
-    def _fast_hist(self, label_true, label_pred, n_class):
+    @staticmethod
+    def _fast_hist(label_true, label_pred, n_class):
         mask = (label_true >= 0) & (label_true < n_class)
         hist = np.bincount(n_class * label_true[mask].astype(int) + label_pred[mask], minlength=n_class ** 2).reshape(
             n_class, n_class)
@@ -31,6 +31,9 @@ class ConfusionMatrix(object):
 
         # use [:-1] since class7 is not considered in deep_globe metric
         mean_iou = np.mean(np.nan_to_num(iou[:-1]))
+
+        mean_iou = np.round(mean_iou*100, 2)
+        iou = [np.round(i*100, 2) for i in iou]
 
         return {
             'iou': iou,

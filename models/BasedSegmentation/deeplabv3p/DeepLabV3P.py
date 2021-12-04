@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.deeplabv3p.aspp import ASPP
-from models.deeplabv3p.resnet_muti import ResNet18_Muti
+from models.BasedSegmentation.deeplabv3p.aspp import ASPP
+from models.BasedSegmentation.deeplabv3p.resnet_muti import ResNet18_Muti
 
 
 class DeepLabV3P(nn.Module):
