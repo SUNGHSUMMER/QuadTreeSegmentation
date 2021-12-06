@@ -17,10 +17,12 @@ from Utils.loss import FocalLoss
 from Utils.lr_scheduler import LR_Scheduler
 from Utils.optimizer import get_Adam_optimizer
 from data_utils.getindex import txt2list
-# from models.MinimalGlobalSeg.MinimalGlobalSeg import MinimalGlobalSeg
-from models.MinimalGlobalSeg.MinimalGlobalSeg_DeepLabV3plus_ResNet101 import MinimalGlobalSeg
 from tensorboardX import SummaryWriter
 from Utils.visual import show_score_as_table
+
+from models.MinimalGlobalSeg.MinimalGlobalSeg import MinimalGlobalSeg
+from models.SingleSubTreeSeg.SingleSubTreeSeg_DeepLabV3plus import SingleSubTreeSeg
+
 
 args = {
     "n_class": 7,
@@ -31,19 +33,23 @@ args = {
     "device": "cuda",
     "devices": "0, 1",
     "learning_rate": 0.0001,
-    "num_epochs": 100,
+    "num_epochs": 50,
     "num_worker": 0,
     "augment": True,
-    "sub_batch_size": 6,
-    "model_name": "MGS",
-    "model_notes": "DeepLabV3P_ResNet101_0.0001Lr_100epoch",
+    "sub_batch_size": 4,
+    "model_name": "SSTS",
+    "model_notes": "SingleSubTreeSeg_DeepLabV3plus",
     "val_frequency": 5
 }
 print("----------------------------------------------------------------")
 n_class = args["n_class"]
 
+
 #######################################################################
-model = MinimalGlobalSeg(num_classes=n_class, patch_size=306)
+#######################################################################
+# model = MinimalGlobalSeg(num_classes=n_class, patch_size=306)
+model = SingleSubTreeSeg(num_classes=n_class, patch_size=306)
+#######################################################################
 #######################################################################
 model_name = args["model_name"]
 model_notes = args["model_notes"]

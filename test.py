@@ -15,8 +15,8 @@ from Evaluator import Evaluator
 from Utils.visual import show_score_as_table, show_results_as_plt, show_raw_prediction
 from data_utils.dataloader import DeepGlobe, collate
 from data_utils.getindex import txt2list
-# from models.MinimalGlobalSeg.MinimalGlobalSeg import MinimalGlobalSeg
-from models.MinimalGlobalSeg.MinimalGlobalSeg_DeepLabV3plus_ResNet101 import MinimalGlobalSeg
+from models.MinimalGlobalSeg.MinimalGlobalSeg import MinimalGlobalSeg
+# from models.MinimalGlobalSeg.MinimalGlobalSeg_DeepLabV3plus_ResNet101 import MinimalGlobalSeg
 
 args = {
     "n_class": 7,
@@ -29,7 +29,7 @@ args = {
     "num_worker": 0,
     "model_path": "./saved_models/",
     "model_name": "MGS",
-    "model_notes": "DeepLabV3P_ResNet101_0.0001Lr_100epoch",
+    "model_notes": "ResNet18_Bilinear_0.0001Lr",
     "using_epoch": "best",
     "visualization_path": "./visualization/",
     "show_plt": True,
