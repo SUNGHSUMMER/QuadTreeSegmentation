@@ -10,9 +10,9 @@ class ResNet18_Features(nn.Module):
         backbone = resnet18()
         if pretrain:
             # 以项目目录索引
-            pretrained_model_path = os.path.join("models", "pretrained_model", "resnet18-5c106cde.pth")
+            pretrained_model_path = os.path.join("models", "PretrainedModel", "resnet18-5c106cde.pth")
             # 以当前目录索引
-            # pretrained_model_path = "../pretrained_model/resnet18-5c106cde.pth"
+            # pretrained_model_path = "../PretrainedModel/resnet18-5c106cde.pth"
 
             backbone.load_state_dict(torch.load(pretrained_model_path))
             print("Using the Pretrain ResNet18 as BackBone")
@@ -32,7 +32,7 @@ class ResNet50_Features(nn.Module):
         backbone = resnet50()
         if pretrain:
             pretrained_model_path = os.path.join("model",
-                                                 "pretrained_model",
+                                                 "PretrainedModel",
                                                  "resnet50-19c8e357.pth")
             backbone.load_state_dict(torch.load(pretrained_model_path))
             print("Using the Pretrain ResNet50 as BackBone")

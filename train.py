@@ -17,8 +17,8 @@ from Utils.loss import FocalLoss
 from Utils.lr_scheduler import LR_Scheduler
 from Utils.optimizer import get_Adam_optimizer
 from data_utils.getindex import txt2list
-# from models.minimal_global_seg.MinimalGlobalSeg import MinimalGlobalSeg
-from models.minimal_global_seg.MinimalGlobalSeg_DeepLabV3plus_ResNet101 import MinimalGlobalSeg
+# from models.MinimalGlobalSeg.MinimalGlobalSeg import MinimalGlobalSeg
+from models.MinimalGlobalSeg.MinimalGlobalSeg_DeepLabV3plus_ResNet101 import MinimalGlobalSeg
 from tensorboardX import SummaryWriter
 from Utils.visual import show_score_as_table
 
@@ -30,13 +30,13 @@ args = {
     "log_path": "./logs/",
     "device": "cuda",
     "devices": "0, 1",
-    "learning_rate": 0.001,
-    "num_epochs": 50,
+    "learning_rate": 0.0001,
+    "num_epochs": 100,
     "num_worker": 0,
     "augment": True,
     "sub_batch_size": 6,
     "model_name": "MGS",
-    "model_notes": "DeepLabV3P_ResNet101",
+    "model_notes": "DeepLabV3P_ResNet101_0.0001Lr_100epoch",
     "val_frequency": 5
 }
 print("----------------------------------------------------------------")
@@ -152,12 +152,14 @@ for epoch in range(num_epochs):
                 score_val = evaluator.get_scores()
                 tbar.set_description('mIoU: %.3f' % score_val["iou_mean"])
             pth_path = os.path.join(save_path, "epoch_" + str(epoch + 1) + ".pth")
+            best_pth_path = os.path.join(save_path, "epoch_best.pth")
             torch.save(model.state_dict(), pth_path)
 
             score_val = evaluator.get_scores()
             evaluator.reset_metrics()
 
             if score_val["iou_mean"] > best_miou:
+                torch.save(model.state_dict(), best_pth_path)
                 best_miou = score_val["iou_mean"]
                 best_epoch = epoch + 1
 

@@ -137,6 +137,7 @@ class ResNet(nn.Module):
 
     def _load_pretrained_model(self):
         pretrain_dict = model_zoo.load_url('https://download.pytorch.org/models/resnet101-5d3b4d8f.pth')
+        print("Pretrain ResNet101!")
         model_dict = {}
         state_dict = self.state_dict()
         for k, v in pretrain_dict.items():
